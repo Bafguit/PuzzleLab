@@ -151,7 +151,6 @@ public class NeowPatch {
 
         public static SpireReturn Prefix(NeowReward _instance) {
             if(_instance.type == NeowPatch.PUZZLE) {
-                System.out.println("### Neow Reward Activate");
                 ReflectionHacks.setPrivate(_instance, NeowReward.class, "activated", true);
                 AbstractDungeon.getCurrRoom().dispose();
                 AbstractDungeon.getCurrRoom().clearEvent();

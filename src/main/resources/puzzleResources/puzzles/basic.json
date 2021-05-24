@@ -1,24 +1,26 @@
-{
-  "0": {
-    "NAME": "Basic Puzzle",
-    "AUTHOR": [
-      "FastCat"
-    ],
-    "FLOOR" : "",
-    "MY_TURN" : "",
-    "TURN" : "",
-    "SCREEN" : "",
-    "SCREEN_UP" : "",
-    "SCREEN_PRE" : "",
-    "LIST" : "",
-    "PLAYER" : "",
-    "RNG" : "",
-    "NODE" : "",
-    "ASCENSION" : "",
-    "HAND_SELECT" : "",
-    "GRID_SELECT" : "",
-    "CARD_TURN" : "",
-    "CARD_BAK" : "",
-    "CARD_DRAWN" : ""
+[
+  {
+    "STAGE_NUMBER": 0,
+    "DATA": {
+      "NAME": "Basic Puzzle",
+      "AUTHOR": [
+        "FastCat"
+      ],
+      "FLOOR": "",
+      "MY_TURN": "",
+      "TURN": "",
+      "SCREEN": "",
+      "SCREEN_UP": "",
+      "SCREEN_PRE": "",
+      "LIST": "",
+      "PLAYER": "",
+      "RNG": "",
+      "NODE": "",
+      "ASCENSION": "",
+      "GRID_SELECT": "",
+      "CARD_TURN": "",
+      "CARD_BAK": "",
+      "CARD_DRAWN": ""
+    }
   }
-}
+]
