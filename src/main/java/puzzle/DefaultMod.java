@@ -2,6 +2,7 @@ package puzzle;
 
 import basemod.*;
 import basemod.interfaces.*;
+import basemod.patches.com.megacrit.cardcrawl.helpers.TopPanel.TopPanelHelper;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
@@ -13,6 +14,7 @@ import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.CardHelper;
 import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.localization.*;
+import com.megacrit.cardcrawl.ui.panels.TopPanel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import puzzle.util.IDCheckDontTouchPls;

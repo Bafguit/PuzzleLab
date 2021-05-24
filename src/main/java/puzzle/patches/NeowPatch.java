@@ -6,15 +6,22 @@
 package puzzle.patches;
 
 import basemod.ReflectionHacks;
+import basemod.interfaces.PostInitializeSubscriber;
+import basemod.patches.com.megacrit.cardcrawl.helpers.TopPanel.TopPanelHelper;
+import basemod.patches.com.megacrit.cardcrawl.ui.panels.TopPanel.TopPanelPatches;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.megacrit.cardcrawl.actions.GameActionManager;
 import com.megacrit.cardcrawl.characters.AnimatedNpc;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.events.GenericEventDialog;
 import com.megacrit.cardcrawl.events.RoomEventDialog;
 import com.megacrit.cardcrawl.events.city.Colosseum;
 import com.megacrit.cardcrawl.events.exordium.DeadAdventurer;
+import com.megacrit.cardcrawl.helpers.FontHelper;
+import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.helpers.MonsterHelper;
 import com.megacrit.cardcrawl.localization.EventStrings;
 import com.megacrit.cardcrawl.monsters.city.GremlinLeader;
@@ -26,12 +33,17 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
+import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
+import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
+import com.megacrit.cardcrawl.ui.panels.TopPanel;
 import com.megacrit.cardcrawl.vfx.InfiniteSpeechBubble;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import org.omg.CORBA.PUBLIC_MEMBER;
+import savestate.SaveState;
+import savestate.SaveStateMod;
 
 public class NeowPatch {
 
@@ -39,6 +51,68 @@ public class NeowPatch {
     public static NeowReward.NeowRewardType PUZZLE;
 
     public NeowPatch() {
+    }
+
+    @SpirePatch(
+            clz = TopPanel.class,
+            method = "updateMapButtonLogic"
+    )
+    public static class UpdateMapPatch {
+        public UpdateMapPatch() {
+        }
+
+        public static SpireReturn Prefix(TopPanel _instance) {
+            return SpireReturn.Return((Object)null);
+        }
+    }
+
+    @SpirePatch(
+            clz = TopPanel.class,
+            method = "renderDungeonInfo",
+            paramtypez = {SpriteBatch.class}
+    )
+    public static class RenderFloorPatch {
+        public RenderFloorPatch() {
+        }
+
+        public static SpireReturn Prefix(TopPanel _instance, SpriteBatch sb) {
+            float floorX = ReflectionHacks.getPrivate(_instance, TopPanel.class, "floorX");
+            float ICON_Y = ReflectionHacks.getPrivate(_instance, TopPanel.class, "ICON_Y");
+            float ICON_W = ReflectionHacks.getPrivate(_instance, TopPanel.class, "ICON_W");
+            float INFO_TEXT_Y = ReflectionHacks.getPrivate(_instance, TopPanel.class, "INFO_TEXT_Y");
+            if (AbstractDungeon.isAscensionMode) {
+                sb.draw(ImageMaster.TP_ASCENSION, floorX + 106.0F * Settings.scale, ICON_Y, ICON_W, ICON_W);
+                if (AbstractDungeon.ascensionLevel == 20) {
+                    FontHelper.renderFontLeftTopAligned(sb, FontHelper.topPanelInfoFont, Integer.toString(AbstractDungeon.ascensionLevel), floorX + 166.0F * Settings.scale, INFO_TEXT_Y, Settings.GOLD_COLOR);
+                } else {
+                    FontHelper.renderFontLeftTopAligned(sb, FontHelper.topPanelInfoFont, Integer.toString(AbstractDungeon.ascensionLevel), floorX + 166.0F * Settings.scale, INFO_TEXT_Y, Settings.RED_TEXT_COLOR);
+                }
+            }
+            if (_instance.ascensionHb != null) {
+                _instance.ascensionHb.render(sb);
+            }
+            return SpireReturn.Return((Object)null);
+        }
+    }
+
+    @SpirePatch(
+            clz = TopPanel.class,
+            method = "renderTopRightIcons"
+    )
+    public static class RenderMapPatch {
+        public RenderMapPatch() {
+        }
+
+        public static ExprEditor Instrument() {
+            return new ExprEditor() {
+                public void edit(MethodCall m) throws CannotCompileException {
+                    if (m.getClassName().equals("com.megacrit.cardcrawl.ui.panels.TopPanel") && m.getMethodName().equals("renderMapIcon")) {
+                        m.replace("");
+                    }
+
+                }
+            };
+        }
     }
 
     @SpirePatch(
@@ -82,7 +156,11 @@ public class NeowPatch {
                 AbstractDungeon.getCurrRoom().dispose();
                 AbstractDungeon.getCurrRoom().clearEvent();
                 AbstractDungeon.effectList.clear();
-                AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter("Colosseum Slavers");
+                if (SaveStateMod.saveState != null) {
+                    SaveStateMod.saveState.loadState();
+                } else {
+                    AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter("Colosseum Slavers");
+                }
                 AbstractDungeon.getCurrRoom().rewards.clear();
                 AbstractDungeon.getCurrRoom().rewardAllowed = false;
                 AbstractDungeon.getCurrRoom().event.hasFocus = false;
@@ -145,7 +223,6 @@ public class NeowPatch {
 
         public static SpireReturn Prefix(NeowEvent _instance) {
             int sn = (int)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "screenNum");
-
             if(sn == 900) {
                 ArrayList<NeowReward> rewards = (ArrayList)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "rewards");
                 rewards.get(0).activate();
