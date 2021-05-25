@@ -1,40 +1,53 @@
 package puzzle;
 
-import basemod.*;
-import basemod.interfaces.*;
-import basemod.patches.com.megacrit.cardcrawl.helpers.TopPanel.TopPanelHelper;
+import basemod.BaseMod;
+import basemod.ModLabeledToggleButton;
+import basemod.ModPanel;
+import basemod.TopPanelItem;
+import basemod.interfaces.EditStringsSubscriber;
+import basemod.interfaces.PostCreateStartingRelicsSubscriber;
+import basemod.interfaces.PostInitializeSubscriber;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.utils.Json;
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.CardHelper;
 import com.megacrit.cardcrawl.helpers.FontHelper;
-import com.megacrit.cardcrawl.localization.*;
-import com.megacrit.cardcrawl.ui.panels.TopPanel;
+import com.megacrit.cardcrawl.localization.EventStrings;
+import jdk.nashorn.internal.parser.JSONParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import puzzle.puzzles.StageLoader;
 import puzzle.util.IDCheckDontTouchPls;
 import puzzle.util.TextureLoader;
+import savestate.SaveState;
+import savestate.SaveStateMod;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Properties;
 
 @SpireInitializer
-public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscriber {
+public class PuzzleLab implements PostInitializeSubscriber, EditStringsSubscriber, PostCreateStartingRelicsSubscriber {
 
-    public static final Logger logger = LogManager.getLogger(DefaultMod.class.getName());
+    public static final Logger logger = LogManager.getLogger(PuzzleLab.class.getName());
     private static String modID;
 
     // Mod-settings settings. This is if you want an on/off savable button
     public static Properties theDefaultDefaultSettings = new Properties();
     public static final String ENABLE_PLACEHOLDER_SETTINGS = "enablePlaceholder";
     public static boolean enablePlaceholder = true; // The boolean we'll be setting on/off (true/false)
+    public static PuzzleModType curMod = PuzzleModType.NONE;
 
     //This is for the in-game mod settings panel.
     private static final String MODNAME = "Default Mod";
@@ -54,9 +67,9 @@ public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscrib
         return getModID() + "Resources/images/events/" + resourcePath;
     }
     
-    public DefaultMod() {
+    public PuzzleLab() {
         logger.info("Subscribe to BaseMod hooks");
-        
+
         BaseMod.subscribe(this);
       
         setModID("puzzle");
@@ -78,11 +91,19 @@ public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscrib
         logger.info("Done adding mod settings");
         
     }
+
+    public static void setCurMod(PuzzleModType type) {
+        curMod = type;
+    }
+
+    public static PuzzleModType getCurMod() {
+        return curMod;
+    }
     
     public static void setModID(String ID) { // DON'T EDIT
         Gson coolG = new Gson(); // EY DON'T EDIT THIS
         //   String IDjson = Gdx.files.internal("IDCheckStringsDONT-EDIT-AT-ALL.json").readString(String.valueOf(StandardCharsets.UTF_8)); // i hate u Gdx.files
-        InputStream in = DefaultMod.class.getResourceAsStream("/IDCheckStringsDONT-EDIT-AT-ALL.json"); // DON'T EDIT THIS ETHER
+        InputStream in = PuzzleLab.class.getResourceAsStream("/IDCheckStringsDONT-EDIT-AT-ALL.json"); // DON'T EDIT THIS ETHER
         IDCheckDontTouchPls EXCEPTION_STRINGS = coolG.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), IDCheckDontTouchPls.class); // OR THIS, DON'T EDIT IT
         logger.info("You are attempting to set your mod ID as: " + ID); // NO WHY
         if (ID.equals(EXCEPTION_STRINGS.DEFAULTID)) { // DO *NOT* CHANGE THIS ESPECIALLY, TO EDIT YOUR MOD ID, SCROLL UP JUST A LITTLE, IT'S JUST ABOVE
@@ -102,9 +123,9 @@ public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscrib
     private static void pathCheck() { // ALSO NO
         Gson coolG = new Gson(); // NOPE DON'T EDIT THIS
         //   String IDjson = Gdx.files.internal("IDCheckStringsDONT-EDIT-AT-ALL.json").readString(String.valueOf(StandardCharsets.UTF_8)); // i still hate u btw Gdx.files
-        InputStream in = DefaultMod.class.getResourceAsStream("/IDCheckStringsDONT-EDIT-AT-ALL.json"); // DON'T EDIT THISSSSS
+        InputStream in = PuzzleLab.class.getResourceAsStream("/IDCheckStringsDONT-EDIT-AT-ALL.json"); // DON'T EDIT THISSSSS
         IDCheckDontTouchPls EXCEPTION_STRINGS = coolG.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), IDCheckDontTouchPls.class); // NAH, NO EDIT
-        String packageName = DefaultMod.class.getPackage().getName(); // STILL NO EDIT ZONE
+        String packageName = PuzzleLab.class.getPackage().getName(); // STILL NO EDIT ZONE
         FileHandle resourcePathExists = Gdx.files.internal(getModID() + "Resources"); // PLEASE DON'T EDIT THINGS HERE, THANKS
         if (!modID.equals(EXCEPTION_STRINGS.DEVID)) { // LEAVE THIS EDIT-LESS
             if (!packageName.equals(getModID())) { // NOT HERE ETHER
@@ -121,7 +142,7 @@ public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscrib
     
     public static void initialize() {
         logger.info("========================= Initializing Default Mod. Hi. =========================");
-        DefaultMod defaultmod = new DefaultMod();
+        PuzzleLab defaultmod = new PuzzleLab();
         logger.info("========================= /Default Mod Initialized. Hello World./ =========================");
     }
     
@@ -131,6 +152,9 @@ public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscrib
         
         // Load the Mod Badge
         Texture badgeTexture = TextureLoader.getTexture(BADGE_IMAGE);
+
+        BaseMod.addTopPanelItem(new PuzzleLab.PuzzleSaveTopPanel());
+        BaseMod.addTopPanelItem(new PuzzleLab.PuzzleLoadTopPanel());
         
         // Create the Mod Menu
         ModPanel settingsPanel = new ModPanel();
@@ -160,6 +184,43 @@ public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscrib
 
         logger.info("Done loading badge Image and mod options");
     }
+
+    public class PuzzleSaveTopPanel extends TopPanelItem {
+        public static final String ID = "puzzle:Save";
+
+        public PuzzleSaveTopPanel() {
+            super(TextureLoader.getTexture("puzzleResources/images/save.png"), "puzzle:Save");
+        }
+
+        protected void onClick() {
+            File file = new File("C:/Users/typic/AppData/Local/ModTheSpire/puzzle/test.json");
+            try {
+                StageLoader.save(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public class PuzzleLoadTopPanel extends TopPanelItem {
+        public static final String ID = "puzzle:Load";
+
+        public PuzzleLoadTopPanel() {
+            super(TextureLoader.getTexture("puzzleResources/images/save.png"), "puzzle:Load");
+        }
+
+        protected void onClick() {
+            try {
+                JsonParser jsonParser = new JsonParser();
+                Object object = jsonParser.parse(new FileReader("C:/Users/typic/AppData/Local/ModTheSpire/puzzle/test.json"));
+                JsonObject jsonObject = (JsonObject) object;
+                SaveStateMod.saveState = new SaveState(jsonObject.toString());
+                SaveStateMod.saveState.loadState();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     
     @Override
     public void receiveEditStrings() {
@@ -169,6 +230,18 @@ public class DefaultMod implements PostInitializeSubscriber, EditStringsSubscrib
                 getModID() + "Resources/localization/eng/DefaultMod-Event-Strings.json");
 
         logger.info("Done edittting strings");
+    }
+
+    @Override
+    public void receivePostCreateStartingRelics(AbstractPlayer.PlayerClass playerClass, ArrayList<String> arrayList) {
+        arrayList.add("Frozen Eye");
+    }
+
+    public static enum PuzzleModType {
+        CAMPAIGN, CUSTOM, MAKER, NONE;
+
+        private PuzzleModType() {
+        }
     }
 
 

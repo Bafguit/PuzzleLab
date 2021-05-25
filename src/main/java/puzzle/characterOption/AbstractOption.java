@@ -5,8 +5,7 @@ import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 /*
 public class AbstractOption extends CharacterOption {
-    public AbstractOption(int stageNumber, AbstractPlayer c) {
+    public AbstractOption(int stageNumber) {
         super(optionName, c, buttonImg, portraitImg);
     }
-}
-*/
+}*/

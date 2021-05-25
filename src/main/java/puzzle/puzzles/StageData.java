@@ -1,26 +1,28 @@
 package puzzle.puzzles;
 
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import savestate.selectscreen.GridCardSelectScreenState;
 import savestate.selectscreen.HandSelectScreenState;
 
 import java.util.ArrayList;
 
 public class StageData {
-    private String NAME;
-    private String[] AUTHOR;
-    private int FLOOR;
-    private boolean MY_TURN;
-    private int TURN;
-    private String SCREEN;
-    private boolean SCREEN_UP;
-    private boolean SCREEN_PRE;
-    private String LIST;
-    private String PLAYER;
-    private String RNG;
-    private String NODE;
-    private int ASCENSION;
-    private ArrayList<Integer> GRID_SELECT;
-    private ArrayList<Integer> CARD_TURN;
-    private ArrayList<Integer> CARD_BAK;
-    private ArrayList<Integer> CARD_DRAWN;
+    public String NAME;
+    public String[] AUTHOR;
+    public String CLASS;
+    public int FLOOR;
+    public boolean MY_TURN;
+    public int TURN;
+    public String SCREEN;
+    public boolean SCREEN_UP;
+    public boolean SCREEN_PRE;
+    public String LIST;
+    public String PLAYER;
+    public String RNG;
+    public String NODE;
+    public int ASCENSION;
+    public ArrayList<Integer> GRID_SELECT;
+    public ArrayList<Integer> CARD_TURN;
+    public ArrayList<Integer> CARD_BAK;
+    public ArrayList<Integer> CARD_DRAWN;
 }

@@ -42,6 +42,7 @@ import javassist.CtBehavior;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import org.omg.CORBA.PUBLIC_MEMBER;
+import puzzle.PuzzleLab;
 import savestate.SaveState;
 import savestate.SaveStateMod;
 
@@ -162,7 +163,6 @@ public class NeowPatch {
                 }
                 AbstractDungeon.getCurrRoom().rewards.clear();
                 AbstractDungeon.getCurrRoom().rewardAllowed = false;
-                AbstractDungeon.getCurrRoom().event.hasFocus = false;
                 AbstractDungeon.getCurrRoom().smoked = false;
                 AbstractDungeon.player.isEscaping = false;
                 AbstractDungeon.getCurrRoom().phase = AbstractRoom.RoomPhase.COMBAT;
@@ -172,7 +172,6 @@ public class NeowPatch {
                 GenericEventDialog.hide();
                 CardCrawlGame.fadeIn(1.5F);
                 AbstractDungeon.rs = AbstractDungeon.RenderScene.NORMAL;
-                AbstractDungeon.getCurrRoom().event.combatTime = true;
                 return SpireReturn.Return((Object) null);
             }
 
@@ -260,7 +259,13 @@ public class NeowPatch {
 
             final float DIALOG_X = (float)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "DIALOG_X");
             final float DIALOG_Y = (float)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "DIALOG_Y");
-            AbstractDungeon.effectList.add(new InfiniteSpeechBubble(DIALOG_X, DIALOG_Y, StartTest.TEXT[StartTest.getCurNum()]));
+            String tempText;
+            if(PuzzleLab.getCurMod().equals(PuzzleLab.PuzzleModType.MAKER)) {
+                tempText = "Puzzle Maker";
+            } else {
+                tempText = StartTest.TEXT[StartTest.getCurNum()];
+            }
+            AbstractDungeon.effectList.add(new InfiniteSpeechBubble(DIALOG_X, DIALOG_Y, tempText));
 
             ArrayList<NeowReward> rewards = (ArrayList)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "rewards");
             rewards.add(new NeowPatch.SwapReward());
