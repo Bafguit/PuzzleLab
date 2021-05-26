@@ -2,12 +2,14 @@ package puzzle.patches;
 
 import basemod.ReflectionHacks;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.characters.AnimatedNpc;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
+import com.megacrit.cardcrawl.helpers.SeedHelper;
 import com.megacrit.cardcrawl.neow.NeowEvent;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
@@ -15,13 +17,16 @@ import com.megacrit.cardcrawl.screens.mainMenu.MainMenuPanelButton;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuButton;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuPanelScreen;
+import com.megacrit.cardcrawl.ui.panels.SeedPanel;
 import javassist.CtBehavior;
 import puzzle.PuzzleLab;
+import puzzle.characterOption.AbstractOption;
 import puzzle.characterOption.CampaignSelectScreen;
 import sun.security.provider.ConfigFile;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Iterator;
 
 public class CharacterScreenPatch {
 
@@ -41,6 +46,150 @@ public class CharacterScreenPatch {
 
     @SpirePatch(
             clz = CharacterSelectScreen.class,
+            method = "render",
+            paramtypez = {SpriteBatch.class}
+    )
+
+    public static class CharacterRenderPatch {
+        public CharacterRenderPatch() {
+        }
+
+        @SpireInsertPatch(
+                locator = CharacterRenderPatch.RenderLocator.class
+        )
+
+        public static SpireReturn Insert(CharacterSelectScreen _instance, SpriteBatch sb) {
+            if(_instance instanceof CampaignSelectScreen) {
+                if (((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    CharacterOption o;
+                    for(Iterator var3 = _instance.options.iterator(); var3.hasNext(); o.render(sb)) {
+                        o = (CharacterOption)var3.next();
+                    }
+                    return SpireReturn.Return((Object) null);
+                }
+            }
+            return SpireReturn.Continue();
+        }
+
+        private static class RenderLocator extends SpireInsertLocator {
+            private RenderLocator() {
+            }
+
+            public int[] Locate(CtBehavior ctBehavior) throws Exception {
+                Matcher finalMatcher = new Matcher.MethodCallMatcher(CharacterSelectScreen.class, "renderAscensionMode");
+                return LineFinder.findInOrder(ctBehavior, finalMatcher);
+            }
+        }
+    }
+
+    @SpirePatch(
+            clz = CharacterSelectScreen.class,
+            method = "update"
+    )
+
+    public static class CharacterUpdatePatch {
+        public CharacterUpdatePatch() {
+        }
+/*
+        public static SpireReturn Postfix(CharacterSelectScreen _instance) {
+            if(_instance instanceof CampaignSelectScreen) {
+                if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    _instance.updateButtons();
+                    _instance.confirmButton.isDisabled = true;
+                    _instance.confirmButton.hide();
+                }
+            }
+            CardCrawlGame.mainMenuScreen.superDarken = false;
+            return SpireReturn.Continue();
+        }
+*/
+        @SpireInsertPatch(
+                locator = CharacterUpdatePatch.RenderLocator.class
+        )
+
+        public static SpireReturn Insert(CharacterSelectScreen _instance) {
+            if(_instance instanceof CampaignSelectScreen) {
+                if (((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    CardCrawlGame.mainMenuScreen.superDarken = false;
+                    return SpireReturn.Return((Object) null);
+                }
+            }
+            return SpireReturn.Continue();
+        }
+
+        private static class RenderLocator extends SpireInsertLocator {
+            private RenderLocator() {
+            }
+
+            public int[] Locate(CtBehavior ctBehavior) throws Exception {
+                Matcher finalMatcher = new Matcher.MethodCallMatcher(SeedPanel.class, "update");
+                return LineFinder.findInOrder(ctBehavior, finalMatcher);
+            }
+        }
+    }
+
+    @SpirePatch(
+            clz = CharacterSelectScreen.class,
+            method = "renderSeedSettings"
+    )
+
+    public static class RenderSeedPatch {
+        public RenderSeedPatch() {
+        }
+
+        public static SpireReturn Prefix(CharacterSelectScreen _instance) {
+            if(_instance instanceof CampaignSelectScreen) {
+                if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    return SpireReturn.Return((Object)null);
+                }
+            }
+
+            return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(
+            clz = CharacterSelectScreen.class,
+            method = "updateAscensionToggle"
+    )
+
+    public static class UpdateAscensionPatch {
+        public UpdateAscensionPatch() {
+        }
+
+        public static SpireReturn Prefix(CharacterSelectScreen _instance) {
+            if(_instance instanceof CampaignSelectScreen) {
+                if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    return SpireReturn.Return((Object)null);
+                }
+            }
+
+            return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(
+            clz = CharacterSelectScreen.class,
+            method = "renderAscensionMode"
+    )
+
+    public static class RenderAscensionPatch {
+        public RenderAscensionPatch() {
+        }
+
+        public static SpireReturn Prefix(CharacterSelectScreen _instance) {
+            if(_instance instanceof CampaignSelectScreen) {
+                if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    return SpireReturn.Return((Object)null);
+                }
+            }
+
+            return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(
+            clz = CharacterSelectScreen.class,
             method = "positionButtons"
     )
     public static class PositionButtonPatch {
@@ -48,19 +197,24 @@ public class CharacterScreenPatch {
         }
 
         public static SpireReturn Prefix(CharacterSelectScreen _instance) {
-            int count = 0;
-            if(PuzzleLab.getCurMod() == PuzzleLab.PuzzleModType.CAMPAIGN) {
-                float offsetX = (float)Settings.WIDTH / 2.0F - 550.0F * Settings.scale;
-                for(int i = 0; i < 4; ++i) {
-                    for(int j = 0; j < 6; j++) {
-                        if (Settings.isMobile) {
-                            ((CharacterOption) _instance.options.get(count++)).hb.move(offsetX + (float) j * 220.0F * Settings.scale, 230.0F * Settings.yScale + (float) i * 220.0F * Settings.scale);
-                        } else {
-                            ((CharacterOption) _instance.options.get(count++)).hb.move(offsetX + (float) j * 220.0F * Settings.scale, 190.0F * Settings.yScale + (float) i * 220.0F * Settings.scale);
+            if(_instance instanceof CampaignSelectScreen) {
+                if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    float offsetX = (float) Settings.WIDTH / 2.0F - 550.0F * Settings.scale;
+                    int count = 0;
+                    for(int i = 0; i < 4; ++i) {
+                        for(int j = 0; j < 6; j++) {
+                            if (Settings.isMobile) {
+                                ((CharacterOption) _instance.options.get(count++)).hb.move(offsetX + (float) j * 220.0F * Settings.scale, 230.0F * Settings.yScale + (float) i * 220.0F * Settings.scale);
+                            } else {
+                                ((CharacterOption) _instance.options.get(count++)).hb.move(offsetX + (float) j * 220.0F * Settings.scale, 190.0F * Settings.yScale + (float) i * 220.0F * Settings.scale);
+                            }
                         }
                     }
+                    System.out.println("##Done!");
+                    return SpireReturn.Return((Object) null);
+                } else  {
+                    return SpireReturn.Continue();
                 }
-                return SpireReturn.Return((Object)null);
             } else {
                 return SpireReturn.Continue();
             }
@@ -75,8 +229,9 @@ public class CharacterScreenPatch {
         public CharInitializePatch() {
         }
 
-        public void positionButton(CharacterSelectScreen _instance) {
-
+        public static SpireReturn Prefix(CharacterSelectScreen _instance) {
+            _instance.options.clear();
+            return SpireReturn.Continue();
         }
 
         @SpireInsertPatch(
@@ -87,13 +242,17 @@ public class CharacterScreenPatch {
             if(_instance instanceof CampaignSelectScreen) {
                 if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
                     _instance.options.clear();
-                    for (int i = 0; i < 24; i++) {
-                        AbstractPlayer p = CardCrawlGame.characterManager.recreateCharacter(AbstractPlayer.PlayerClass.THE_SILENT);
-                        _instance.options.add(p.getCharacterSelectOption());
+                    int count;
+                    for (int i = 3; i >= 0; i--) {
+                        count = 6 * i;
+                        for(int j = 0; j < 6; j++) {
+                            count++;
+                            _instance.options.add(new AbstractOption(count));
+                        }
                     }
                 }
             }
-                return SpireReturn.Continue();
+            return SpireReturn.Continue();
         }
 
         private static class RenderLocator extends SpireInsertLocator {
@@ -150,6 +309,7 @@ public class CharacterScreenPatch {
                 if(CardCrawlGame.mainMenuScreen.charSelectScreen instanceof CampaignSelectScreen) {
                     ((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).puzzleType = CampaignSelectScreen.PuzzleType.CAMPAIGN;
                 }
+                CardCrawlGame.mainMenuScreen.charSelectScreen.initialize();
                 CardCrawlGame.mainMenuScreen.charSelectScreen.open(false);
             } else if(result == PUZZLE_CUSTOM) {
                 if(CardCrawlGame.mainMenuScreen.charSelectScreen instanceof CampaignSelectScreen) {
@@ -159,6 +319,7 @@ public class CharacterScreenPatch {
                 if(CardCrawlGame.mainMenuScreen.charSelectScreen instanceof CampaignSelectScreen) {
                     ((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).puzzleType = CampaignSelectScreen.PuzzleType.MAKER;
                 }
+                CardCrawlGame.mainMenuScreen.charSelectScreen.initialize();
                 CardCrawlGame.mainMenuScreen.charSelectScreen.open(false);
             }
             return SpireReturn.Continue();

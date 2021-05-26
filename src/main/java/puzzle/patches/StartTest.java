@@ -65,8 +65,6 @@ public class StartTest {
         }
         AbstractDungeon.bossCount = 1;
         AbstractDungeon.generateSeeds();
-        CardCrawlGame.mode = GameMode.CHAR_SELECT;
-        AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter(GremlinLeader.ID);
     }
 
     public static int getCurNum() {
