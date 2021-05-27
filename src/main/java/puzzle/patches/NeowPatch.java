@@ -43,6 +43,8 @@ import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import org.omg.CORBA.PUBLIC_MEMBER;
 import puzzle.PuzzleLab;
+import puzzle.characterOption.CampaignSelectScreen;
+import puzzle.puzzles.StageLoader;
 import savestate.SaveState;
 import savestate.SaveStateMod;
 
@@ -156,22 +158,22 @@ public class NeowPatch {
                 AbstractDungeon.getCurrRoom().dispose();
                 AbstractDungeon.getCurrRoom().clearEvent();
                 AbstractDungeon.effectList.clear();
-                if (SaveStateMod.saveState != null) {
-                    SaveStateMod.saveState.loadState();
-                } else {
-                    AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter("Colosseum Slavers");
-                }
+                AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter("Colosseum Slavers");
                 AbstractDungeon.getCurrRoom().rewards.clear();
                 AbstractDungeon.getCurrRoom().rewardAllowed = false;
                 AbstractDungeon.getCurrRoom().smoked = false;
                 AbstractDungeon.player.isEscaping = false;
                 AbstractDungeon.getCurrRoom().phase = AbstractRoom.RoomPhase.COMBAT;
                 AbstractDungeon.getCurrRoom().monsters.init();
-                AbstractRoom.waitTimer = 0.1F;
-                AbstractDungeon.player.preBattlePrep();
+                AbstractDungeon.overlayMenu.endTurnButton.enable();
+                //AbstractDungeon.player.preBattlePrep();
                 GenericEventDialog.hide();
-                CardCrawlGame.fadeIn(1.5F);
                 AbstractDungeon.rs = AbstractDungeon.RenderScene.NORMAL;
+                if(CardCrawlGame.mainMenuScreen.charSelectScreen instanceof CampaignSelectScreen) {
+                    StageLoader.loadStage(((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).currentStage);
+                }
+                AbstractDungeon.player.update();
+                CardCrawlGame.fadeIn(1.5F);
                 return SpireReturn.Return((Object) null);
             }
 

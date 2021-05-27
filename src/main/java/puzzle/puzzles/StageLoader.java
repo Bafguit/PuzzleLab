@@ -1,6 +1,10 @@
 package puzzle.puzzles;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import savestate.SaveState;
@@ -34,6 +38,15 @@ public class StageLoader {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void loadStage(int stageNumber) {
+        JsonParser jsonParser = new JsonParser();
+        FileHandle fileHandle = Gdx.files.internal("puzzleResources/puzzles/stage_" + stageNumber + ".json");
+        Object object = jsonParser.parse(fileHandle.reader());
+        JsonObject jsonObject = (JsonObject) object;
+        SaveStateMod.saveState = new SaveState(jsonObject.toString());
+        SaveStateMod.saveState.loadState();
     }
     /*
     public static void main(String[] args) {

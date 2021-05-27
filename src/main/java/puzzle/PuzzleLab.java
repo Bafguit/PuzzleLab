@@ -26,6 +26,7 @@ import com.megacrit.cardcrawl.localization.EventStrings;
 import jdk.nashorn.internal.parser.JSONParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import puzzle.patches.StartTest;
 import puzzle.puzzles.StageLoader;
 import puzzle.util.IDCheckDontTouchPls;
 import puzzle.util.TextureLoader;
@@ -153,8 +154,13 @@ public class PuzzleLab implements PostInitializeSubscriber, EditStringsSubscribe
         // Load the Mod Badge
         Texture badgeTexture = TextureLoader.getTexture(BADGE_IMAGE);
 
+        StartTest.makeCampaignStage();
+
         BaseMod.addTopPanelItem(new PuzzleLab.PuzzleSaveTopPanel());
         BaseMod.addTopPanelItem(new PuzzleLab.PuzzleLoadTopPanel());
+
+        logger.info("Generating campaign options");
+        logger.info("Done generating campaign options");
         
         // Create the Mod Menu
         ModPanel settingsPanel = new ModPanel();
@@ -210,15 +216,7 @@ public class PuzzleLab implements PostInitializeSubscriber, EditStringsSubscribe
         }
 
         protected void onClick() {
-            try {
-                JsonParser jsonParser = new JsonParser();
-                Object object = jsonParser.parse(new FileReader("C:/Users/typic/AppData/Local/ModTheSpire/puzzle/test.json"));
-                JsonObject jsonObject = (JsonObject) object;
-                SaveStateMod.saveState = new SaveState(jsonObject.toString());
-                SaveStateMod.saveState.loadState();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+            StageLoader.loadStage(1);
         }
     }
     

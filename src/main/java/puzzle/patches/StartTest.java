@@ -5,7 +5,10 @@
 
 package puzzle.patches;
 
+import basemod.interfaces.ISubscriber;
 import basemod.interfaces.PostDungeonInitializeSubscriber;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.core.CardCrawlGame.GameMode;
@@ -22,17 +25,25 @@ import com.megacrit.cardcrawl.neow.NeowReward;
 import com.megacrit.cardcrawl.neow.NeowRoom;
 import com.megacrit.cardcrawl.random.Random;
 import com.megacrit.cardcrawl.screens.DungeonTransitionScreen;
+import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 import com.megacrit.cardcrawl.shop.ShopScreen;
+import puzzle.characterOption.AbstractOption;
+import savestate.SaveState;
+import savestate.SaveStateMod;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
+import java.util.ArrayList;
 
-public class StartTest {
+public class StartTest implements ISubscriber {
 
     public static final EventStrings eventStrings = CardCrawlGame.languagePack.getEventString("BASIC");
     public static final String[] TEXT = eventStrings.DESCRIPTIONS;
     public static final String[] OPTIONS = eventStrings.OPTIONS;
+    public static ArrayList<CharacterOption> campaignOptions = new ArrayList<>();
 
     private static int curNum = 0;
 
@@ -65,6 +76,17 @@ public class StartTest {
         }
         AbstractDungeon.bossCount = 1;
         AbstractDungeon.generateSeeds();
+    }
+
+    public static void makeCampaignStage() {
+        int count;
+        for (int i = 3; i >= 0; i--) {
+            count = 6 * i;
+            for(int j = 0; j < 6; j++) {
+                count++;
+                campaignOptions.add(new AbstractOption(count, count == 1 ? false : true));
+            }
+        }
     }
 
     public static int getCurNum() {

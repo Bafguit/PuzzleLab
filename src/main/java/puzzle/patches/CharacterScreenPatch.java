@@ -26,6 +26,7 @@ import sun.security.provider.ConfigFile;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 public class CharacterScreenPatch {
@@ -64,6 +65,9 @@ public class CharacterScreenPatch {
                     CharacterOption o;
                     for(Iterator var3 = _instance.options.iterator(); var3.hasNext(); o.render(sb)) {
                         o = (CharacterOption)var3.next();
+                        if(o instanceof AbstractOption && o.selected) {
+                            ((CampaignSelectScreen) _instance).currentStage = ((AbstractOption) o).stageNumber;
+                        }
                     }
                     return SpireReturn.Return((Object) null);
                 }
@@ -241,15 +245,12 @@ public class CharacterScreenPatch {
         public static SpireReturn Insert(CharacterSelectScreen _instance) {
             if(_instance instanceof CampaignSelectScreen) {
                 if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    System.out.println("##Makeing Campaign Buttons");
                     _instance.options.clear();
-                    int count;
-                    for (int i = 3; i >= 0; i--) {
-                        count = 6 * i;
-                        for(int j = 0; j < 6; j++) {
-                            count++;
-                            _instance.options.add(new AbstractOption(count));
-                        }
+                    for(int i = 0; i < 24; i++) {
+                        _instance.options.add(StartTest.campaignOptions.get(i));
                     }
+                    System.out.println("##Done! : " + _instance.options.toString());
                 }
             }
             return SpireReturn.Continue();
