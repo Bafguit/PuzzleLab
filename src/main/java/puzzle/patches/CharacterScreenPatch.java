@@ -11,6 +11,7 @@ import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.helpers.SeedHelper;
 import com.megacrit.cardcrawl.neow.NeowEvent;
+import com.megacrit.cardcrawl.screens.DungeonTransitionScreen;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuPanelButton;
@@ -22,6 +23,7 @@ import javassist.CtBehavior;
 import puzzle.PuzzleLab;
 import puzzle.characterOption.AbstractOption;
 import puzzle.characterOption.CampaignSelectScreen;
+import puzzle.puzzles.StageLoader;
 import sun.security.provider.ConfigFile;
 
 import java.lang.reflect.InvocationTargetException;
@@ -61,16 +63,15 @@ public class CharacterScreenPatch {
 
         public static SpireReturn Insert(CharacterSelectScreen _instance, SpriteBatch sb) {
             if(_instance instanceof CampaignSelectScreen) {
-                if (((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
-                    CharacterOption o;
-                    for(Iterator var3 = _instance.options.iterator(); var3.hasNext(); o.render(sb)) {
-                        o = (CharacterOption)var3.next();
-                        if(o instanceof AbstractOption && o.selected) {
-                            ((CampaignSelectScreen) _instance).currentStage = ((AbstractOption) o).stageNumber;
-                        }
+                CharacterOption o;
+                for(Iterator var3 = _instance.options.iterator(); var3.hasNext(); o.render(sb)) {
+                    o = (CharacterOption)var3.next();
+                    if(o instanceof AbstractOption && o.selected) {
+                        ((CampaignSelectScreen) _instance).currentStage = ((AbstractOption) o).stageNumber;
+                        StageLoader.loadStageInfo(((AbstractOption) o).stageNumber);
                     }
-                    return SpireReturn.Return((Object) null);
                 }
+                return SpireReturn.Return((Object) null);
             }
             return SpireReturn.Continue();
         }
@@ -94,19 +95,7 @@ public class CharacterScreenPatch {
     public static class CharacterUpdatePatch {
         public CharacterUpdatePatch() {
         }
-/*
-        public static SpireReturn Postfix(CharacterSelectScreen _instance) {
-            if(_instance instanceof CampaignSelectScreen) {
-                if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
-                    _instance.updateButtons();
-                    _instance.confirmButton.isDisabled = true;
-                    _instance.confirmButton.hide();
-                }
-            }
-            CardCrawlGame.mainMenuScreen.superDarken = false;
-            return SpireReturn.Continue();
-        }
-*/
+
         @SpireInsertPatch(
                 locator = CharacterUpdatePatch.RenderLocator.class
         )
@@ -413,6 +402,7 @@ public class CharacterScreenPatch {
 
         public static SpireReturn Postfix(MenuButton _instance) {
             if(_instance.result == PUZZLE_LAB) {
+                StageLoader.resetInfo();
                 CardCrawlGame.mainMenuScreen.panelScreen.open(PUZZLE);
             }
             return SpireReturn.Continue();

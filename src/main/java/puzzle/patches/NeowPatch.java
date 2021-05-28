@@ -9,6 +9,7 @@ import basemod.ReflectionHacks;
 import basemod.interfaces.PostInitializeSubscriber;
 import basemod.patches.com.megacrit.cardcrawl.helpers.TopPanel.TopPanelHelper;
 import basemod.patches.com.megacrit.cardcrawl.ui.panels.TopPanel.TopPanelPatches;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.actions.GameActionManager;
@@ -16,6 +17,7 @@ import com.megacrit.cardcrawl.characters.AnimatedNpc;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.dungeons.Exordium;
 import com.megacrit.cardcrawl.events.GenericEventDialog;
 import com.megacrit.cardcrawl.events.RoomEventDialog;
 import com.megacrit.cardcrawl.events.city.Colosseum;
@@ -33,8 +35,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
+import com.megacrit.cardcrawl.screens.DungeonTransitionScreen;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
+import com.megacrit.cardcrawl.screens.mainMenu.MainMenuPanelButton;
+import com.megacrit.cardcrawl.screens.mainMenu.MenuPanelScreen;
+import com.megacrit.cardcrawl.screens.options.ConfirmPopup;
 import com.megacrit.cardcrawl.ui.panels.TopPanel;
 import com.megacrit.cardcrawl.vfx.InfiniteSpeechBubble;
 import javassist.CannotCompileException;
@@ -54,6 +60,38 @@ public class NeowPatch {
     public static NeowReward.NeowRewardType PUZZLE;
 
     public NeowPatch() {
+    }
+
+    @SpirePatch(
+            clz = DungeonTransitionScreen.class,
+            method = "setAreaName"
+    )
+    public static class AreaNamePatch {
+        public AreaNamePatch() {
+        }
+
+        public static SpireReturn Prefix(DungeonTransitionScreen _instance) {
+            CharacterSelectScreen cs = CardCrawlGame.mainMenuScreen.charSelectScreen;
+            if(cs instanceof CampaignSelectScreen && StageLoader.stageClass != null) {
+                if(((CampaignSelectScreen) cs).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    _instance.levelName = StageLoader.stageTitle;
+                    _instance.levelNum = "Stage " + ((CampaignSelectScreen) cs).currentStage;
+                } else if(((CampaignSelectScreen) cs).puzzleType == CampaignSelectScreen.PuzzleType.CUSTOM) {
+                    _instance.levelName = StageLoader.stageTitle;
+                    _instance.levelNum = "Custom Stage";
+                } else {
+                    _instance.levelName = "New Puzzle";
+                    _instance.levelNum = "Puzzle Maker";
+                }
+
+            } else {
+                _instance.levelName = "No Level Name";
+                _instance.levelNum = "No Level Number";
+            }
+            AbstractDungeon.name = _instance.levelName;
+            AbstractDungeon.levelNum = _instance.levelNum;
+            return SpireReturn.Return((Object)null);
+        }
     }
 
     @SpirePatch(
@@ -159,8 +197,6 @@ public class NeowPatch {
                 AbstractDungeon.getCurrRoom().clearEvent();
                 AbstractDungeon.effectList.clear();
                 AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter("Colosseum Slavers");
-                AbstractDungeon.getCurrRoom().rewards.clear();
-                AbstractDungeon.getCurrRoom().rewardAllowed = false;
                 AbstractDungeon.getCurrRoom().smoked = false;
                 AbstractDungeon.player.isEscaping = false;
                 AbstractDungeon.getCurrRoom().phase = AbstractRoom.RoomPhase.COMBAT;
@@ -170,8 +206,12 @@ public class NeowPatch {
                 GenericEventDialog.hide();
                 AbstractDungeon.rs = AbstractDungeon.RenderScene.NORMAL;
                 if(CardCrawlGame.mainMenuScreen.charSelectScreen instanceof CampaignSelectScreen) {
-                    StageLoader.loadStage(((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).currentStage);
+                    if(((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                        StageLoader.loadStage(((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).currentStage);
+                    }
                 }
+                AbstractDungeon.getCurrRoom().rewards.clear();
+                AbstractDungeon.getCurrRoom().rewardAllowed = false;
                 AbstractDungeon.player.update();
                 CardCrawlGame.fadeIn(1.5F);
                 return SpireReturn.Return((Object) null);
