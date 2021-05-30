@@ -6,53 +6,44 @@
 package puzzle.patches;
 
 import basemod.ReflectionHacks;
-import basemod.interfaces.PostInitializeSubscriber;
-import basemod.patches.com.megacrit.cardcrawl.helpers.TopPanel.TopPanelHelper;
-import basemod.patches.com.megacrit.cardcrawl.ui.panels.TopPanel.TopPanelPatches;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
-import com.megacrit.cardcrawl.actions.GameActionManager;
 import com.megacrit.cardcrawl.characters.AnimatedNpc;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.dungeons.Exordium;
 import com.megacrit.cardcrawl.events.GenericEventDialog;
-import com.megacrit.cardcrawl.events.RoomEventDialog;
-import com.megacrit.cardcrawl.events.city.Colosseum;
-import com.megacrit.cardcrawl.events.exordium.DeadAdventurer;
-import com.megacrit.cardcrawl.helpers.FontHelper;
-import com.megacrit.cardcrawl.helpers.ImageMaster;
-import com.megacrit.cardcrawl.helpers.MonsterHelper;
-import com.megacrit.cardcrawl.localization.EventStrings;
-import com.megacrit.cardcrawl.monsters.city.GremlinLeader;
+import com.megacrit.cardcrawl.helpers.*;
+import com.megacrit.cardcrawl.helpers.controller.CInputActionSet;
+import com.megacrit.cardcrawl.helpers.input.InputHelper;
 import com.megacrit.cardcrawl.neow.NeowEvent;
 import com.megacrit.cardcrawl.neow.NeowReward;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Iterator;
 
+import com.megacrit.cardcrawl.rewards.RewardItem;
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
+import com.megacrit.cardcrawl.rooms.MonsterRoomBoss;
+import com.megacrit.cardcrawl.rooms.TreasureRoomBoss;
 import com.megacrit.cardcrawl.screens.DungeonTransitionScreen;
-import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
-import com.megacrit.cardcrawl.screens.mainMenu.MainMenuPanelButton;
-import com.megacrit.cardcrawl.screens.mainMenu.MenuPanelScreen;
-import com.megacrit.cardcrawl.screens.options.ConfirmPopup;
+import com.megacrit.cardcrawl.ui.buttons.ProceedButton;
 import com.megacrit.cardcrawl.ui.panels.TopPanel;
 import com.megacrit.cardcrawl.vfx.InfiniteSpeechBubble;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
-import org.omg.CORBA.PUBLIC_MEMBER;
 import puzzle.PuzzleLab;
-import puzzle.characterOption.CampaignSelectScreen;
+import puzzle.abstracts.CampaignSelectScreen;
 import puzzle.puzzles.StageLoader;
-import savestate.SaveState;
-import savestate.SaveStateMod;
+
+import static basemod.ReflectionHacks.*;
 
 public class NeowPatch {
 
@@ -60,6 +51,105 @@ public class NeowPatch {
     public static NeowReward.NeowRewardType PUZZLE;
 
     public NeowPatch() {
+    }
+
+    @SpirePatch(
+            clz = ProceedButton.class,
+            method = "update"
+    )
+
+    public static class UpdateProceedPatch {
+        public UpdateProceedPatch() {
+        }
+
+        public static SpireReturn Prefix(ProceedButton _instance) {
+            if (!(boolean) getPrivate(_instance, ProceedButton.class, "isHidden")) {
+                setPrivate(_instance, ProceedButton.class, "wavyTimer", (float) getPrivate(_instance, ProceedButton.class, "wavyTimer") + Gdx.graphics.getDeltaTime() * 3.0F);
+                float current_x = (float) ReflectionHacks.getPrivate(_instance, ProceedButton.class, "current_x");
+                Hitbox hb = (Hitbox) getPrivate(_instance, ProceedButton.class, "hb");
+                if (current_x - (float) getPrivate(_instance, ProceedButton.class, "SHOW_X") < (float) getPrivate(_instance, ProceedButton.class, "CLICKABLE_DIST")) {
+                    ((Hitbox) getPrivate(_instance, ProceedButton.class, "hb")).update();
+                }
+
+                _instance.isHovered = hb.hovered;
+                if (hb.hovered && InputHelper.justClickedLeft) {
+                    CardCrawlGame.sound.play("UI_CLICK_1");
+                    ((Hitbox) getPrivate(_instance, ProceedButton.class, "hb")).clickStarted = true;
+                }
+
+                hb = (Hitbox) getPrivate(_instance, ProceedButton.class, "hb");
+                if (hb.justHovered && AbstractDungeon.screen == AbstractDungeon.CurrentScreen.COMBAT_REWARD) {
+                    Iterator var1 = AbstractDungeon.combatRewardScreen.rewards.iterator();
+
+                    while (var1.hasNext()) {
+                        RewardItem i = (RewardItem) var1.next();
+                        i.flash();
+                    }
+                }
+
+                if (hb.clicked || CInputActionSet.proceed.isJustPressed()) {
+                    ((Hitbox) getPrivate(_instance, ProceedButton.class, "hb")).clicked = false;
+                    AbstractRoom currentRoom = AbstractDungeon.getCurrRoom();
+
+                    System.out.println("## Screen Check");
+                    AbstractDungeon.closeCurrentScreen();
+                    AbstractDungeon.screen = AbstractDungeon.CurrentScreen.VICTORY;
+                    AbstractDungeon.victoryScreen.update();
+                    _instance.hide();
+                }
+
+                float target_x = (float) getPrivate(_instance, ProceedButton.class, "target_x");
+                if (current_x != target_x) {
+                    setPrivate(_instance, ProceedButton.class, "current_x", MathUtils.lerp((float) ReflectionHacks.getPrivate(_instance, ProceedButton.class, "current_x"), target_x, Gdx.graphics.getDeltaTime() * 9.0F));
+                    current_x = (float) ReflectionHacks.getPrivate(_instance, ProceedButton.class, "current_x");
+                    if (Math.abs(current_x - target_x) < Settings.UI_SNAP_THRESHOLD) {
+                        setPrivate(_instance, ProceedButton.class, "current_x", target_x);
+                    }
+                }
+                return SpireReturn.Return((Object) null);
+            }
+            return SpireReturn.Continue();
+        }
+
+        public static ExprEditor Instrument() {
+            return new ExprEditor() {
+                public void edit(MethodCall m) throws CannotCompileException {
+                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad")) {
+                        m.replace(" this.hb.clickStarted = true; $_ = $proceed($$); ");
+                        System.out.println("##EmptyLoad 1");
+                    }
+                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad2")) {
+                        m.replace(" this.hb.clicked = false; $_ = $proceed($$); ");
+                        System.out.println("##EmptyLoad 2");
+                    }
+                }
+            };
+        }
+    }
+
+    @SpirePatch(
+            clz = ProceedButton.class,
+            method = "update"
+    )
+
+    public static class UpdateProceedInsertPatch {
+        public UpdateProceedInsertPatch() {
+        }
+
+        public static ExprEditor Instrument() {
+            return new ExprEditor() {
+                public void edit(MethodCall m) throws CannotCompileException {
+                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad")) {
+                        m.replace(" this.hb.clickStarted = true; $_ = $proceed($$); ");
+                        System.out.println("##EmptyLoad 1");
+                    }
+                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad2")) {
+                        m.replace(" this.hb.clicked = false; $_ = $proceed($$); ");
+                        System.out.println("##EmptyLoad 2");
+                    }
+                }
+            };
+        }
     }
 
     @SpirePatch(
@@ -117,10 +207,10 @@ public class NeowPatch {
         }
 
         public static SpireReturn Prefix(TopPanel _instance, SpriteBatch sb) {
-            float floorX = ReflectionHacks.getPrivate(_instance, TopPanel.class, "floorX");
-            float ICON_Y = ReflectionHacks.getPrivate(_instance, TopPanel.class, "ICON_Y");
-            float ICON_W = ReflectionHacks.getPrivate(_instance, TopPanel.class, "ICON_W");
-            float INFO_TEXT_Y = ReflectionHacks.getPrivate(_instance, TopPanel.class, "INFO_TEXT_Y");
+            float floorX = getPrivate(_instance, TopPanel.class, "floorX");
+            float ICON_Y = getPrivate(_instance, TopPanel.class, "ICON_Y");
+            float ICON_W = getPrivate(_instance, TopPanel.class, "ICON_W");
+            float INFO_TEXT_Y = getPrivate(_instance, TopPanel.class, "INFO_TEXT_Y");
             if (AbstractDungeon.isAscensionMode) {
                 sb.draw(ImageMaster.TP_ASCENSION, floorX + 106.0F * Settings.scale, ICON_Y, ICON_W, ICON_W);
                 if (AbstractDungeon.ascensionLevel == 20) {
@@ -166,9 +256,9 @@ public class NeowPatch {
         }
 
         public static SpireReturn Prefix(NeowReward _instance, boolean firstMini) {
-            ReflectionHacks.setPrivate(_instance, NeowReward.class, "activated", false);
-            ReflectionHacks.setPrivate(_instance, NeowReward.class, "cursed", false);
-            ReflectionHacks.setPrivate(_instance, NeowReward.class, "hp_bonus", 0);
+            setPrivate(_instance, NeowReward.class, "activated", false);
+            setPrivate(_instance, NeowReward.class, "cursed", false);
+            setPrivate(_instance, NeowReward.class, "hp_bonus", 0);
             _instance.drawback = NeowReward.NeowRewardDrawback.NONE;
             _instance.optionLabel = StartTest.OPTIONS[0];
             _instance.type = PUZZLE;
@@ -192,7 +282,7 @@ public class NeowPatch {
 
         public static SpireReturn Prefix(NeowReward _instance) {
             if(_instance.type == NeowPatch.PUZZLE) {
-                ReflectionHacks.setPrivate(_instance, NeowReward.class, "activated", true);
+                setPrivate(_instance, NeowReward.class, "activated", true);
                 AbstractDungeon.getCurrRoom().dispose();
                 AbstractDungeon.getCurrRoom().clearEvent();
                 AbstractDungeon.effectList.clear();
@@ -235,7 +325,7 @@ public class NeowPatch {
         )
 
         public static SpireReturn Insert(NeowEvent _instance, SpriteBatch sb) {
-            AnimatedNpc npc = (AnimatedNpc) ReflectionHacks.getPrivate(_instance, NeowEvent.class, "npc");
+            AnimatedNpc npc = (AnimatedNpc) getPrivate(_instance, NeowEvent.class, "npc");
             if(npc != null) {
                 npc.render(sb);
             }
@@ -262,9 +352,9 @@ public class NeowPatch {
         }
 
         public static SpireReturn Prefix(NeowEvent _instance) {
-            int sn = (int)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "screenNum");
+            int sn = (int) getPrivate(_instance, NeowEvent.class, "screenNum");
             if(sn == 900) {
-                ArrayList<NeowReward> rewards = (ArrayList)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "rewards");
+                ArrayList<NeowReward> rewards = (ArrayList) getPrivate(_instance, NeowEvent.class, "rewards");
                 rewards.get(0).activate();
                 sn = 99;
                 return SpireReturn.Return((Object) null);
@@ -299,8 +389,8 @@ public class NeowPatch {
                 e.printStackTrace();
             }
 
-            final float DIALOG_X = (float)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "DIALOG_X");
-            final float DIALOG_Y = (float)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "DIALOG_Y");
+            final float DIALOG_X = (float) getPrivate(_instance, NeowEvent.class, "DIALOG_X");
+            final float DIALOG_Y = (float) getPrivate(_instance, NeowEvent.class, "DIALOG_Y");
             String tempText;
             if(PuzzleLab.getCurMod().equals(PuzzleLab.PuzzleModType.MAKER)) {
                 tempText = "Puzzle Maker";
@@ -309,13 +399,13 @@ public class NeowPatch {
             }
             AbstractDungeon.effectList.add(new InfiniteSpeechBubble(DIALOG_X, DIALOG_Y, tempText));
 
-            ArrayList<NeowReward> rewards = (ArrayList)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "rewards");
+            ArrayList<NeowReward> rewards = (ArrayList) getPrivate(_instance, NeowEvent.class, "rewards");
             rewards.add(new NeowPatch.SwapReward());
 
             _instance.roomEventText.clearRemainingOptions();
             _instance.roomEventText.updateDialogOption(0, rewards.get(0).optionLabel);
 
-            ReflectionHacks.setPrivate(_instance, NeowEvent.class, "screenNum", 900);
+            setPrivate(_instance, NeowEvent.class, "screenNum", 900);
 
             return SpireReturn.Return((Object)null);
         }
@@ -346,17 +436,17 @@ public class NeowPatch {
                 e.printStackTrace();
             }
 
-            final float DIALOG_X = (float)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "DIALOG_X");
-            final float DIALOG_Y = (float)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "DIALOG_Y");
+            final float DIALOG_X = (float) getPrivate(_instance, NeowEvent.class, "DIALOG_X");
+            final float DIALOG_Y = (float) getPrivate(_instance, NeowEvent.class, "DIALOG_Y");
             AbstractDungeon.effectList.add(new InfiniteSpeechBubble(DIALOG_X, DIALOG_Y, StartTest.TEXT[StartTest.getCurNum()]));
 
-            ArrayList<NeowReward> rewards = (ArrayList)ReflectionHacks.getPrivate(_instance, NeowEvent.class, "rewards");
+            ArrayList<NeowReward> rewards = (ArrayList) getPrivate(_instance, NeowEvent.class, "rewards");
             rewards.add(new NeowPatch.SwapReward());
 
             _instance.roomEventText.clearRemainingOptions();
             _instance.roomEventText.updateDialogOption(0, StartTest.OPTIONS[0]);
 
-            ReflectionHacks.setPrivate(_instance, NeowEvent.class, "screenNum", 900);
+            setPrivate(_instance, NeowEvent.class, "screenNum", 900);
 
             return SpireReturn.Return((Object)null);
         }

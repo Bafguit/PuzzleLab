@@ -2,25 +2,16 @@ package puzzle.puzzles;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
-import com.megacrit.cardcrawl.screens.DungeonTransitionScreen;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
-import puzzle.characterOption.AbstractOption;
-import puzzle.characterOption.CampaignSelectScreen;
+import puzzle.abstracts.CampaignSelectScreen;
 import savestate.SaveState;
 import savestate.SaveStateMod;
 
 import java.io.*;
-import java.lang.reflect.Type;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
 
 public class StageLoader {
 
@@ -93,6 +84,10 @@ public class StageLoader {
         stageTitle = null;
         stageAuthor = null;
     }
+
+    public static void emptyLoad() { }
+
+    public static void emptyLoad2() { }
 
     public static enum PuzzleType {
         CAMPAIGN, CUSTOM, MAKER, NONE;

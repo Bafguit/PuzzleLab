@@ -1,4 +1,4 @@
-package puzzle.characterOption;
+package puzzle.abstracts;
 
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
 

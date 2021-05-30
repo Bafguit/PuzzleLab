@@ -2,16 +2,10 @@ package puzzle.patches;
 
 import basemod.ReflectionHacks;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
-import com.megacrit.cardcrawl.characters.AbstractPlayer;
-import com.megacrit.cardcrawl.characters.AnimatedNpc;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
-import com.megacrit.cardcrawl.helpers.SeedHelper;
-import com.megacrit.cardcrawl.neow.NeowEvent;
-import com.megacrit.cardcrawl.screens.DungeonTransitionScreen;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuPanelButton;
@@ -20,15 +14,10 @@ import com.megacrit.cardcrawl.screens.mainMenu.MenuButton;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuPanelScreen;
 import com.megacrit.cardcrawl.ui.panels.SeedPanel;
 import javassist.CtBehavior;
-import puzzle.PuzzleLab;
-import puzzle.characterOption.AbstractOption;
-import puzzle.characterOption.CampaignSelectScreen;
+import puzzle.abstracts.AbstractOption;
+import puzzle.abstracts.CampaignSelectScreen;
 import puzzle.puzzles.StageLoader;
-import sun.security.provider.ConfigFile;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 public class CharacterScreenPatch {

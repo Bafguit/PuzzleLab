@@ -1,11 +1,9 @@
-package puzzle.characterOption;
+package puzzle.abstracts;
 
 import basemod.ReflectionHacks;
-import com.badlogic.gdx.graphics.Texture;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
-import com.megacrit.cardcrawl.screens.mainMenu.MainMenuPanelButton;
 import puzzle.util.TextureLoader;
 
 public class AbstractOption extends CharacterOption {

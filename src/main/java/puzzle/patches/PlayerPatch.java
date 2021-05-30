@@ -1,39 +1,12 @@
 package puzzle.patches;
 
-import basemod.ReflectionHacks;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.megacrit.cardcrawl.characters.AbstractPlayer;
-import com.megacrit.cardcrawl.characters.AnimatedNpc;
 import com.megacrit.cardcrawl.core.AbstractCreature;
-import com.megacrit.cardcrawl.core.CardCrawlGame;
-import com.megacrit.cardcrawl.core.Settings;
-import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.neow.NeowEvent;
-import com.megacrit.cardcrawl.neow.NeowReward;
-import com.megacrit.cardcrawl.screens.charSelect.CharacterOption;
-import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
-import com.megacrit.cardcrawl.screens.mainMenu.MenuPanelScreen;
-import com.megacrit.cardcrawl.ui.buttons.ProceedButton;
 import javassist.CannotCompileException;
-import javassist.CtBehavior;
-import javassist.CtMethod;
-import javassist.NotFoundException;
-import javassist.bytecode.Descriptor;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
-import org.lwjgl.Sys;
-import puzzle.characterOption.AbstractOption;
-import puzzle.characterOption.CampaignSelectScreen;
-import puzzle.puzzles.StageLoader;
 import savestate.SaveState;
-import sun.security.provider.ConfigFile;
-
-import java.util.Iterator;
 
 public class PlayerPatch {
     public PlayerPatch() {
@@ -99,7 +72,7 @@ public class PlayerPatch {
             return new ExprEditor() {
                 public void edit(MethodCall m) throws CannotCompileException {
                     if (m.getClassName().equals("com.megacrit.cardcrawl.core.AbstractCreature") && m.getMethodName().equals("renderHealthBg")) {
-                        m.replace("if(com.megacrit.cardcrawl.core.CardCrawlGame.mainMenuScreen.charSelectScreen instanceof puzzle.characterOption.CampaignSelectScreen && this.isPlayer) { y = this.hb.cY - this.hb.height / 2.0F; } $_ = $proceed($$);");
+                        m.replace("if(com.megacrit.cardcrawl.core.CardCrawlGame.mainMenuScreen.charSelectScreen instanceof puzzle.abstracts.CampaignSelectScreen && this.isPlayer) { y = this.hb.cY - this.hb.height / 2.0F; } $_ = $proceed($$);");
                     }
 
                 }
