@@ -26,7 +26,7 @@ public class PlayerPatch {
             return new ExprEditor() {
                 public void edit(MethodCall m) throws CannotCompileException {
                     if (m.getClassName().equals("savestate.MapRoomNodeState") && m.getMethodName().equals("encode")) {
-                        m.replace("saveStateJson.addProperty(\"player_class\", com.megacrit.cardcrawl.dungeons.AbstractDungeon.player.chosenClass.toString()); saveStateJson.addProperty(\"stage_title\", \"Holding\"); saveStateJson.addProperty(\"stage_author\", \"FastCat\"); $_ = $proceed($$); ");
+                        m.replace("saveStateJson.addProperty(\"player_class\", com.megacrit.cardcrawl.dungeons.AbstractDungeon.player.chosenClass.toString()); saveStateJson.addProperty(\"stage_title\", puzzle.puzzles.StageLoader.stageTitle); saveStateJson.addProperty(\"stage_author\", puzzle.puzzles.StageLoader.stageAuthor); $_ = $proceed($$); ");
                     }
                 }
             };

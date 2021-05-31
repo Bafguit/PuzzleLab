@@ -11,6 +11,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Json;
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
@@ -20,12 +21,20 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.CardHelper;
 import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.localization.EventStrings;
+import com.megacrit.cardcrawl.rooms.AbstractRoom;
+import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
+import com.megacrit.cardcrawl.ui.panels.SeedPanel;
 import jdk.nashorn.internal.parser.JSONParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import puzzle.abstracts.GeneratePanel;
+import puzzle.abstracts.LinkPanel;
+import puzzle.abstracts.PanelHandler;
+import puzzle.abstracts.TitlePanel;
 import puzzle.patches.StartTest;
 import puzzle.puzzles.StageLoader;
 import puzzle.util.IDCheckDontTouchPls;
@@ -33,6 +42,8 @@ import puzzle.util.TextureLoader;
 import savestate.SaveState;
 import savestate.SaveStateMod;
 
+import javax.swing.border.TitledBorder;
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -54,6 +65,7 @@ public class PuzzleLab implements PostInitializeSubscriber, EditStringsSubscribe
     private static final String MODNAME = "Default Mod";
     private static final String AUTHOR = "Gremious"; // And pretty soon - You!
     private static final String DESCRIPTION = "A base for Slay the Spire to start your own mod from, feat. the Default.";
+
     
     // =============== INPUT TEXTURE LOCATION =================
     
@@ -156,8 +168,9 @@ public class PuzzleLab implements PostInitializeSubscriber, EditStringsSubscribe
 
         StartTest.makeCampaignStage();
 
-        BaseMod.addTopPanelItem(new PuzzleLab.PuzzleSaveTopPanel());
-        BaseMod.addTopPanelItem(new PuzzleLab.PuzzleLoadTopPanel());
+//        BaseMod.addTopPanelItem(new PuzzleLab.PuzzleSaveTopPanel());
+        BaseMod.addTopPanelItem(new PanelHandler.PuzzleLinkTopPanel());
+        BaseMod.addTopPanelItem(new TestTopPanel());
 
         logger.info("Generating campaign options");
         logger.info("Done generating campaign options");
@@ -191,32 +204,38 @@ public class PuzzleLab implements PostInitializeSubscriber, EditStringsSubscribe
         logger.info("Done loading badge Image and mod options");
     }
 
-    public class PuzzleSaveTopPanel extends TopPanelItem {
-        public static final String ID = "puzzle:Save";
+//    public class PuzzleSaveTopPanel extends TopPanelItem {
+//        public static final String ID = "puzzle:Save";
+//
+//        public PuzzleSaveTopPanel() {
+//            super(TextureLoader.getTexture("puzzleResources/images/save.png"), "puzzle:Save");
+//        }
+//
+//        protected void onClick() {
+//            File file = new File("C:/Users/typic/AppData/Local/ModTheSpire/puzzle/test.json");
+//            try {
+//                StageLoader.save(file);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
-        public PuzzleSaveTopPanel() {
-            super(TextureLoader.getTexture("puzzleResources/images/save.png"), "puzzle:Save");
+
+
+    public class TestTopPanel extends TopPanelItem {
+        public static final String ID = "test";
+
+        public TestTopPanel() {
+            super(TextureLoader.getTexture("puzzleResources/images/save.png"), "test");
         }
 
         protected void onClick() {
-            File file = new File("C:/Users/typic/AppData/Local/ModTheSpire/puzzle/test.json");
             try {
-                StageLoader.save(file);
+                StageLoader.UploadBin();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public class PuzzleLoadTopPanel extends TopPanelItem {
-        public static final String ID = "puzzle:Load";
-
-        public PuzzleLoadTopPanel() {
-            super(TextureLoader.getTexture("puzzleResources/images/save.png"), "puzzle:Load");
-        }
-
-        protected void onClick() {
-            StageLoader.loadStage(1);
         }
     }
     

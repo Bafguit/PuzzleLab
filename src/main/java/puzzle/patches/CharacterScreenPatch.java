@@ -17,6 +17,7 @@ import javassist.CtBehavior;
 import puzzle.abstracts.AbstractOption;
 import puzzle.abstracts.CampaignSelectScreen;
 import puzzle.puzzles.StageLoader;
+import sun.security.provider.ConfigFile;
 
 import java.util.Iterator;
 
@@ -52,15 +53,19 @@ public class CharacterScreenPatch {
 
         public static SpireReturn Insert(CharacterSelectScreen _instance, SpriteBatch sb) {
             if(_instance instanceof CampaignSelectScreen) {
-                CharacterOption o;
-                for(Iterator var3 = _instance.options.iterator(); var3.hasNext(); o.render(sb)) {
-                    o = (CharacterOption)var3.next();
-                    if(o instanceof AbstractOption && o.selected) {
-                        ((CampaignSelectScreen) _instance).currentStage = ((AbstractOption) o).stageNumber;
-                        StageLoader.loadStageInfo(((AbstractOption) o).stageNumber);
+                if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
+                    CharacterOption o;
+                    for (Iterator var3 = _instance.options.iterator(); var3.hasNext(); o.render(sb)) {
+                        o = (CharacterOption) var3.next();
+                        if (o instanceof AbstractOption && o.selected) {
+                            ((CampaignSelectScreen) _instance).currentStage = ((AbstractOption) o).stageNumber;
+                            StageLoader.loadStageInfo(((AbstractOption) o).stageNumber);
+                        }
                     }
+                    return SpireReturn.Return((Object) null);
+                } else {
+                    return SpireReturn.Continue();
                 }
-                return SpireReturn.Return((Object) null);
             }
             return SpireReturn.Continue();
         }
@@ -163,6 +168,8 @@ public class CharacterScreenPatch {
             if(_instance instanceof CampaignSelectScreen) {
                 if(((CampaignSelectScreen) _instance).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
                     return SpireReturn.Return((Object)null);
+                } else {
+                    return SpireReturn.Continue();
                 }
             }
 

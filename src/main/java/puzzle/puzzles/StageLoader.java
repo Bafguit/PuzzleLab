@@ -1,6 +1,7 @@
 package puzzle.puzzles;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Net;
 import com.badlogic.gdx.files.FileHandle;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -10,8 +11,14 @@ import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
 import puzzle.abstracts.CampaignSelectScreen;
 import savestate.SaveState;
 import savestate.SaveStateMod;
+import sun.net.www.http.HttpClient;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 
 public class StageLoader {
 
@@ -85,7 +92,27 @@ public class StageLoader {
         stageAuthor = null;
     }
 
-    public static void emptyLoad() { }
+    public static void UploadBin() throws IOException {
+        URL url = new URL("https://api.jsonbin.io/b/");
+        URLConnection con = url.openConnection();
+        HttpURLConnection http = (HttpURLConnection)con;
+        http.setRequestMethod("POST"); // PUT is another valid option
+        http.setDoOutput(true);
+        http.setRequestProperty("Content-Type", "application/json");
+        http.setRequestProperty("X-Master-Key", "$2b$10$65kXb.DYpHcSQm.nd352mex6w5O1xV7cqaOKlYi5NIe6KKW2StF7C");
+        http.setRequestProperty("X-Collection-Id", "60b461ff92af611956f70625");
+        http.setRequestProperty("X-Bin-Name", StageLoader.stageTitle);
+        DataOutputStream outputStream = new DataOutputStream(http.getOutputStream());
+        byte[] out = "{\n  \"FIRST\": \"FastCat\",\n\"second\": \"JsonBin\",\n\"ThIrD\": \"Test\"\n}".getBytes(StandardCharsets.UTF_8);
+        outputStream.write(out);
+        outputStream.flush();
+        outputStream.close();
+//        int length = out.length;
+//        http.setFixedLengthStreamingMode(length);
+//        try(OutputStream os = http.getOutputStream()) {
+//            os.write(out);
+//        }
+    }
 
     public static void emptyLoad2() { }
 

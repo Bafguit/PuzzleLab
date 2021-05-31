@@ -5,6 +5,7 @@
 
 package puzzle.patches;
 
+import basemod.BaseMod;
 import basemod.ReflectionHacks;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -18,6 +19,7 @@ import com.megacrit.cardcrawl.events.GenericEventDialog;
 import com.megacrit.cardcrawl.helpers.*;
 import com.megacrit.cardcrawl.helpers.controller.CInputActionSet;
 import com.megacrit.cardcrawl.helpers.input.InputHelper;
+import com.megacrit.cardcrawl.monsters.MonsterGroup;
 import com.megacrit.cardcrawl.neow.NeowEvent;
 import com.megacrit.cardcrawl.neow.NeowReward;
 
@@ -30,7 +32,9 @@ import com.megacrit.cardcrawl.rewards.RewardItem;
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
 import com.megacrit.cardcrawl.rooms.MonsterRoomBoss;
 import com.megacrit.cardcrawl.rooms.TreasureRoomBoss;
+import com.megacrit.cardcrawl.rooms.VictoryRoom;
 import com.megacrit.cardcrawl.screens.DungeonTransitionScreen;
+import com.megacrit.cardcrawl.screens.VictoryScreen;
 import com.megacrit.cardcrawl.screens.charSelect.CharacterSelectScreen;
 import com.megacrit.cardcrawl.ui.buttons.ProceedButton;
 import com.megacrit.cardcrawl.ui.panels.TopPanel;
@@ -41,7 +45,9 @@ import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import puzzle.PuzzleLab;
 import puzzle.abstracts.CampaignSelectScreen;
+import puzzle.abstracts.FinishScreen;
 import puzzle.puzzles.StageLoader;
+import savestate.SaveStateMod;
 
 import static basemod.ReflectionHacks.*;
 
@@ -89,13 +95,9 @@ public class NeowPatch {
 
                 if (hb.clicked || CInputActionSet.proceed.isJustPressed()) {
                     ((Hitbox) getPrivate(_instance, ProceedButton.class, "hb")).clicked = false;
-                    AbstractRoom currentRoom = AbstractDungeon.getCurrRoom();
-
                     System.out.println("## Screen Check");
-                    AbstractDungeon.closeCurrentScreen();
-                    AbstractDungeon.screen = AbstractDungeon.CurrentScreen.VICTORY;
-                    AbstractDungeon.victoryScreen.update();
                     _instance.hide();
+                    AbstractDungeon.victoryScreen = new FinishScreen((MonsterGroup) null);
                 }
 
                 float target_x = (float) getPrivate(_instance, ProceedButton.class, "target_x");
@@ -111,45 +113,6 @@ public class NeowPatch {
             return SpireReturn.Continue();
         }
 
-        public static ExprEditor Instrument() {
-            return new ExprEditor() {
-                public void edit(MethodCall m) throws CannotCompileException {
-                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad")) {
-                        m.replace(" this.hb.clickStarted = true; $_ = $proceed($$); ");
-                        System.out.println("##EmptyLoad 1");
-                    }
-                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad2")) {
-                        m.replace(" this.hb.clicked = false; $_ = $proceed($$); ");
-                        System.out.println("##EmptyLoad 2");
-                    }
-                }
-            };
-        }
-    }
-
-    @SpirePatch(
-            clz = ProceedButton.class,
-            method = "update"
-    )
-
-    public static class UpdateProceedInsertPatch {
-        public UpdateProceedInsertPatch() {
-        }
-
-        public static ExprEditor Instrument() {
-            return new ExprEditor() {
-                public void edit(MethodCall m) throws CannotCompileException {
-                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad")) {
-                        m.replace(" this.hb.clickStarted = true; $_ = $proceed($$); ");
-                        System.out.println("##EmptyLoad 1");
-                    }
-                    if (m.getClassName().equals("puzzle.puzzles.StageLoader") && m.getMethodName().equals("emptyLoad2")) {
-                        m.replace(" this.hb.clicked = false; $_ = $proceed($$); ");
-                        System.out.println("##EmptyLoad 2");
-                    }
-                }
-            };
-        }
     }
 
     @SpirePatch(
@@ -292,9 +255,9 @@ public class NeowPatch {
                 AbstractDungeon.getCurrRoom().phase = AbstractRoom.RoomPhase.COMBAT;
                 AbstractDungeon.getCurrRoom().monsters.init();
                 AbstractDungeon.overlayMenu.endTurnButton.enable();
-                //AbstractDungeon.player.preBattlePrep();
                 GenericEventDialog.hide();
                 AbstractDungeon.rs = AbstractDungeon.RenderScene.NORMAL;
+                AbstractDungeon.player.preBattlePrep();
                 if(CardCrawlGame.mainMenuScreen.charSelectScreen instanceof CampaignSelectScreen) {
                     if(((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).puzzleType == CampaignSelectScreen.PuzzleType.CAMPAIGN) {
                         StageLoader.loadStage(((CampaignSelectScreen) CardCrawlGame.mainMenuScreen.charSelectScreen).currentStage);
@@ -392,10 +355,10 @@ public class NeowPatch {
             final float DIALOG_X = (float) getPrivate(_instance, NeowEvent.class, "DIALOG_X");
             final float DIALOG_Y = (float) getPrivate(_instance, NeowEvent.class, "DIALOG_Y");
             String tempText;
-            if(PuzzleLab.getCurMod().equals(PuzzleLab.PuzzleModType.MAKER)) {
-                tempText = "Puzzle Maker";
+            if(StageLoader.puzzleType.equals(StageLoader.PuzzleType.CAMPAIGN) || StageLoader.puzzleType.equals(StageLoader.PuzzleType.CUSTOM)) {
+                tempText = StageLoader.stageTitle + " by " + StageLoader.stageAuthor;
             } else {
-                tempText = StartTest.TEXT[StartTest.getCurNum()];
+                tempText = "Make your own puzzle!";
             }
             AbstractDungeon.effectList.add(new InfiniteSpeechBubble(DIALOG_X, DIALOG_Y, tempText));
 
